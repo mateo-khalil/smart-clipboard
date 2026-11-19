@@ -182,7 +182,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate, NSToolbarDeleg
             f.separator(),
             f.label("Mouse:"),
             f.checkbox("Classic scrolling for the mouse wheel", isOn: preferences.reverseMouseScroll) { [preferences] in preferences.reverseMouseScroll = $0 },
-            f.note("The trackpad keeps natural scrolling. Needs Accessibility and natural scrolling turned on in System Settings."),
+            f.note("The trackpad keeps natural scrolling. Works while natural scrolling is on in System Settings."),
+            f.checkbox("Back and forward with the side buttons", isOn: preferences.mouseSideButtons) { [preferences] in preferences.mouseSideButtons = $0 },
+            f.note("In Safari, Finder, System Settings and the App Store. Chrome and Firefox already do it on their own. Both options need Accessibility."),
             f.separator(),
             f.button("Permissions & Setup…") { [weak self] in self?.onOpenSetup?() },
         ])

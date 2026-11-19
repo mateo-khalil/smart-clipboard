@@ -7,7 +7,7 @@
 <p align="center">
   <b>A native clipboard manager for macOS that uses ~22 MB of RAM. With 1,000 items or with 100,000.</b><br>
   Everything you liked about Maccy, rebuilt so your history lives on disk instead of in memory.<br>
-  <i>New in 1.1: classic scrolling for your mouse wheel, natural scrolling for your trackpad.</i>
+  <i>New in 1.1: classic scrolling for your mouse wheel, natural scrolling for your trackpad, and side buttons that go back and forward in Safari.</i>
 </p>
 
 <p align="center">
@@ -35,6 +35,8 @@ SmartClipboard 1.1 does it for you. Turn on **Preferences > General > Classic sc
 - a Magic Mouse counts as a trackpad, since it scrolls like one.
 
 It costs nothing: the same **22 MB and 0.0 % CPU** with it on or off, and no added delay per scroll. The event tap runs on its own thread and only listens for scroll events, so a busy moment in the app can never stall scrolling anywhere else. No extra app, no extra process.
+
+The **side buttons** (4 and 5) get the same treatment with **Back and forward with the side buttons**. Chrome and Firefox already understand them; Safari, Finder, System Settings and the App Store ignore them. In those apps SmartClipboard turns the click into ⌘[ or ⌘], and everywhere else it lets the click through untouched, so an editor where ⌘[ means "outdent" never sees it.
 
 <p align="center">
   <img src="docs/general.png" width="460" alt="Classic scrolling for the mouse wheel, in Preferences > General">
@@ -85,6 +87,7 @@ macOS has no notification for clipboard changes, so every clipboard manager has 
 - **Import your Maccy history** in one click (Preferences > Advanced). It works on a copy and never writes to Maccy's files.
 - **Same shortcuts as Maccy**, all customizable, plus position options (at the cursor, under the menu bar icon, centered, or where you left it).
 - **Classic mouse wheel, natural trackpad** (new in 1.1, optional, Preferences > General). macOS has one natural-scrolling switch for both; turn this on and the mouse wheel scrolls the classic way (wheel down, page down) while the trackpad stays natural. A Magic Mouse counts as a trackpad. It needs Accessibility, and it does nothing while natural scrolling is off.
+- **Mouse side buttons go back and forward** (new in 1.1, optional, Preferences > General) in Safari, Finder, System Settings and the App Store, which ignore them. Browsers that already handle them, and every other app, get the click untouched.
 - **Setup window** on first launch that walks through permissions and launch at login.
 
 <p align="center">
@@ -97,7 +100,7 @@ macOS has no notification for clipboard changes, so every clipboard manager has 
 
 The build is universal (Apple Silicon and Intel), signed with a Developer ID and notarized by Apple, so it opens without Gatekeeper warnings. Requires macOS 14 Sonoma or later.
 
-On first launch, Setup asks for **Accessibility** permission. It's needed to paste into the app you're using (it sends a ⌘V) and for classic mouse scrolling; without it, SmartClipboard still records and copies.
+On first launch, Setup asks for **Accessibility** permission. It's needed to paste into the app you're using (it sends a ⌘V) and for the mouse options; without it, SmartClipboard still records and copies.
 
 Coming from Maccy? Quit it, then use **Preferences > Advanced > Import from Maccy…**.
 
@@ -144,6 +147,7 @@ Maccy is a great app, and SmartClipboard copies its behavior on purpose. This is
 | Search modes | Exact, Fuzzy, Regexp, Mixed | Exact, Fuzzy, Regexp, Mixed |
 | Pins, ignore lists, paste without formatting | Yes | Yes |
 | Classic mouse wheel with a natural trackpad | No: needs another app | Built in, at no extra memory |
+| Back and forward with the mouse side buttons in Safari | No: needs another app | Built in, at no extra memory |
 | Translations | Many languages | English only |
 | Mac App Store / Homebrew | Yes | Not yet: DMG or source |
 
@@ -155,7 +159,7 @@ If memory isn't a problem on your Mac, Maccy is a perfectly good choice. If you'
 Sources/
   ClipCore       models, filters, search and the capture pipeline (no AppKit, unit-tested)
   ClipStore      SQLite history and content files in ~/Library/Application Support/SmartClipboard
-  ClipPlatform   pasteboard, global hotkey, paste, scroll reverser and macOS services
+  ClipPlatform   pasteboard, global hotkey, paste, mouse tap and macOS services
   ClipUI         the panel, Preferences and Setup
   cliphelper     the short-lived process that reads the clipboard and writes large pastes
   clipbench      search, paging and cleanup benchmarks
@@ -167,7 +171,7 @@ Sources/
 - **Measure with `footprint`, never RSS.** RSS hides swapped and compressed memory.
 - **Signing must stay stable.** macOS ties the Accessibility permission to the signature, so changing it means granting the permission again.
 - **Nothing runs while idle** beyond the `changeCount` check.
-- **The scroll reverser's event tap stays on its own thread and only asks for scroll events.** On the main thread, any busy moment in the app would stall scrolling in every app. Idle, the thread sleeps in the kernel: same 22 MB and 0.0 % CPU with or without it, and no added delay per event. It flips only discrete (wheel) events, and writes the point delta last from its original value, because setting the line delta makes macOS recompute it with acceleration.
+- **The mouse tap stays on its own thread and only asks for the events its options need** (scroll, and buttons 3 and up). On the main thread, any busy moment in the app would stall scrolling in every app. Idle, the thread sleeps in the kernel: same 22 MB and 0.0 % CPU with or without it, and no added delay per event. It flips only discrete (wheel) events, and writes the point delta last from its original value, because setting the line delta makes macOS recompute it with acceleration. Side buttons are translated only in an allowlist of apps (`MouseTap.navigationApps`): a blanket ⌘[ would outdent code in editors, and Chrome would go back twice.
 
 ## Development
 

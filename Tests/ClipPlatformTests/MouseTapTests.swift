@@ -9,7 +9,7 @@ private func wheel(_ units: CGScrollEventUnit, vertical: Int32, horizontal: Int3
 @Test func wheelEventIsFlippedOnBothAxes() {
     let event = wheel(.line, vertical: 3, horizontal: -1)
     let point = (event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1), event.getIntegerValueField(.scrollWheelEventPointDeltaAxis2))
-    #expect(ScrollReverser.flipIfWheel(event))
+    #expect(MouseTap.flipIfWheel(event))
     #expect(event.getIntegerValueField(.scrollWheelEventDeltaAxis1) == -3)
     #expect(event.getIntegerValueField(.scrollWheelEventDeltaAxis2) == 1)
     #expect(event.getDoubleValueField(.scrollWheelEventFixedPtDeltaAxis1) == -3)
@@ -21,6 +21,16 @@ private func wheel(_ units: CGScrollEventUnit, vertical: Int32, horizontal: Int3
 
 @Test func trackpadEventIsLeftAlone() {
     let event = wheel(.pixel, vertical: 10, horizontal: 0)
-    #expect(!ScrollReverser.flipIfWheel(event))
+    #expect(!MouseTap.flipIfWheel(event))
     #expect(event.getIntegerValueField(.scrollWheelEventPointDeltaAxis1) == 10)
+}
+
+@Test func sideButtonsOnlyTranslateWhereTheyAreIgnored() {
+    #expect(MouseTap.navigates("com.apple.Safari"))
+    #expect(MouseTap.navigates("com.apple.finder"))
+    #expect(MouseTap.navigates("com.apple.Safari.WebApp.ABC123"))
+    // Chrome handles the buttons itself; in VS Code ⌘[ would outdent the line.
+    #expect(!MouseTap.navigates("com.google.Chrome"))
+    #expect(!MouseTap.navigates("com.microsoft.VSCode"))
+    #expect(!MouseTap.navigates(nil))
 }

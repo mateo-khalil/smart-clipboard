@@ -80,7 +80,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         if !GlobalHotKey.shared.register(preferences.openShortcut) {
             Toast.show("That shortcut is taken by another app. Pick a new one in Preferences.")
         }
-        updateScrollReverser(announceFailure: false)
+        updateMouseTap(announceFailure: false)
         observeChanges()
         Self.maintain(store: store, preferences: preferences)
 
@@ -212,19 +212,23 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         monitor?.reschedule()
         updateStatusItem()
-        updateScrollReverser(announceFailure: true)
+        updateMouseTap(announceFailure: true)
     }
 
-    private var scrollReverserWanted = false
+    private var mouseFixesWanted = MouseFixes(classicWheel: false, sideButtons: false)
+
+    private var mouseFixes: MouseFixes {
+        MouseFixes(classicWheel: preferences.reverseMouseScroll, sideButtons: preferences.mouseSideButtons)
+    }
 
     /// Retried on every preference change and when Setup closes, which is
     /// where Accessibility gets granted.
-    private func updateScrollReverser(announceFailure: Bool) {
-        let wanted = preferences.reverseMouseScroll
-        defer { scrollReverserWanted = wanted }
-        if ScrollReverser.shared.setEnabled(wanted) { return }
-        if announceFailure && !scrollReverserWanted {
-            Toast.show("Mouse scrolling needs Accessibility. Grant it in Setup.")
+    private func updateMouseTap(announceFailure: Bool) {
+        let wanted = mouseFixes
+        defer { mouseFixesWanted = wanted }
+        if MouseTap.shared.configure(wanted) { return }
+        if announceFailure && wanted != mouseFixesWanted {
+            Toast.show("The mouse options need Accessibility. Grant it in Setup.")
         }
     }
 
@@ -289,8 +293,8 @@ final class AppController: NSObject, NSApplicationDelegate {
         if !Permissions.accessibilityGranted {
             menu.addItem(item("⚠︎ Paste needs Accessibility", #selector(openSetup)))
         }
-        if preferences.reverseMouseScroll && !ScrollReverser.shared.isRunning {
-            menu.addItem(item("⚠︎ Mouse scrolling needs Accessibility", #selector(openSetup)))
+        if mouseFixes.any && !MouseTap.shared.isRunning {
+            menu.addItem(item("⚠︎ Mouse options need Accessibility", #selector(openSetup)))
         }
         if menu.numberOfItems > 0 { menu.addItem(.separator()) }
         menu.addItem(item(preferences.paused ? "Resume" : "Pause", #selector(togglePause)))
@@ -352,7 +356,7 @@ final class AppController: NSObject, NSApplicationDelegate {
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
                         self?.setup = nil
-                        self?.updateScrollReverser(announceFailure: false)
+                        self?.updateMouseTap(announceFailure: false)
                         releaseFreeMemory()
                     }
                 }

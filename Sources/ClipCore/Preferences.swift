@@ -98,6 +98,12 @@ public final class Preferences: @unchecked Sendable {
         set { set(newValue, "reverseMouseScroll") }
     }
 
+    /// The mouse side buttons go back and forward in Safari, Finder and similar apps.
+    public var mouseSideButtons: Bool {
+        get { bool("mouseSideButtons", false) }
+        set { set(newValue, "mouseSideButtons") }
+    }
+
     // MARK: Storage
 
     public var saveFiles: Bool {
